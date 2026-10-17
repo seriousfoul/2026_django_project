@@ -1,0 +1,18 @@
+{% extends "front_template.htm" %}
+{% load static %}
+
+{% block title%}
+  <title>史打克工業 - 常見問題</title>
+  
+{% endblock%}	
+
+{% block content%}
+  <div id="category">
+   {% for row in faq %}
+   <div>
+     <h3>Q：{{row.question}}</h3>
+		 <h3 style="color: black;">A:<br /><pre>{{row.answer}}</pre></h3><br>
+   </div>
+   {% endfor %}
+  </div>
+{% endblock %}

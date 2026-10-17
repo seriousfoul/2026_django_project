@@ -1,0 +1,116 @@
+{% extends "backend_template.htm" %}
+{% load static %}
+
+{% block title%}
+  <title>史打克工業後端管理系統 - 公司資訊</title>
+  <script src="{% static "/js/backend.js" %}" defer></script>
+{% endblock %}
+
+{% block content%}
+<div id="iframeBody">
+	<div class="backendSubMenu">
+		{% for type in subMenu %}
+		<button class="btn btn-outline-warning" onclick="changePage('{{mainType}}', '{{type.type}}');">{{type.typeName}}</button>
+		{% endfor%}
+	</div>
+	{% if not data %}
+	<div class="formSet">      
+		<form action="/backend/{{mainType}}/{{subType}}/" method="POST" enctype="multipart/form-data">
+			{% csrf_token %}
+			<fieldset>
+				<legend>新增{{ currentTypeName }}</legend>
+				<div class="mb-3">
+					<label class="form-label" for="name">公司：</label>
+					<input class="form-control" name="name" /><br>
+					<label class="form-label" for="email">信箱：</label>
+					<input class="form-control" type="email" name="email" /><br>
+					<label class="form-label" for="address">地址：</label>
+					<input class="form-control" name="address" /><br>
+					<label class="form-label" for="phone">電話：</label>
+					<input class="form-control" type="tel" name="phone" /><br>
+					<label class="form-label" for="fax">傳真：</label>
+					<input class="form-control" type="tel" name="fax" /><br>
+					<label class="form-label" for="servicetime">服務時間：</label>
+					<textarea class="form-control" name="servicetime" rows="10" cols="50" >
+					</textarea><br>
+				</div>          
+				<input class="btn btn-danger" type="submit" value="送出" />
+			</fieldset>
+		</form>
+	</div>
+	{% endif %}
+	<hr>
+	 {% if data %}
+	<div>
+		<h2>{{ currentTypeName }}資料表</h2>
+		<table class="table table-dark" id="rawTable" border="1">
+			<tr class="table-danger">
+				<th>公司</th>
+				<th>信箱</th>
+				<th>地址</th>
+				<th>電話</th>
+				<th>傳真</th>
+				<th>服務時間</th>
+				<th>修改</th>
+			</tr>
+			<tr>
+    			<td>{{data.name}}</td>
+    			<td>{{data.email}}</td>
+				<td>{{data.address}}</td>
+				<td>{{data.phone}}</td>
+				<td>{{data.fax}}</td>
+				<td><pre>{{data.servicetime}}</pre></td>
+				<td><span onclick="putData('{{mainType}}','{{subType}}');">🛠️</span></td>
+			</tr>
+		</table>    
+	</div>
+ {% endif %}
+	<div class="formSet">
+		<form id="putform" action="" method="POST" enctype="multipart/form-data">
+			{% csrf_token %}
+			<fieldset>
+			<legend>修改{{ currentTypeName }}</legend>
+			<div class="mb-3">
+    			<label class="form-label" for="putformName">公司：</label>
+    			<input class="form-control" name="name" id="putformName" /><br>
+			</div>
+			<div class="mb-3">
+    			<label class="form-label" for="putformEmail">信箱：</label>
+    			<input class="form-control" type="email" name="email" id="putformEmail" /><br>
+			</div>
+			<div class="mb-3">
+    			<label class="form-label" for="putformAddress">地址：</label>
+    			<input class="form-control" name="address" id="putformAddress" /><br>
+			</div>
+			<div class="mb-3">
+    			<label class="form-label" for="putformPhone">電話：</label>
+    			<input class="form-control" name="phone" id="putformPhone" /><br>
+			</div>
+			<div class="mb-3">
+    			<label class="form-label" for="putformFax">傳真：</label>
+    			<input class="form-control" type="tel" name="fax" id="putformFax" /><br>
+			</div>
+			<div class="mb-3">
+    			<label class="form-label" for="putformServicetime">服務時間：</label>
+    			<textarea class="form-control" name="servicetime" rows="10" cols="50" id="putformServicetime"></textarea><br>
+			</div>
+			<button class="btn btn-danger" type="submit" id="putformButton">送出</button>
+			</fieldset>
+		</form>
+	</div>
+  <script>  
+
+  function putData(mainType, subType) {
+    document.getElementById('putform').style.display = "block";
+    document.getElementById('putformName').value = "{{data.name}}";
+    document.getElementById('putformEmail').value = "{{data.email}}";
+    document.getElementById('putformAddress').value = "{{data.address}}";
+    document.getElementById('putformPhone').value = "{{data.phone}}";
+    document.getElementById('putformFax').value = "{{data.fax}}";
+    document.getElementById('putformServicetime').value = `{{data.servicetime}}`;
+    document.getElementById('putform').action = `/backend/${mainType}/${subType}/put/`;
+  }
+
+</script>
+</div>
+{% endblock %}

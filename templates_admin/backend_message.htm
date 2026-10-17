@@ -1,0 +1,129 @@
+{% extends "backend_template.htm" %}
+{% load static %}
+
+{% block title%}
+  <title>史打克工業後端管理系統 - 訂單訊息</title> 
+  <script src="{% static "/js/backend.js" %}" defer></script>
+{% endblock %}
+
+{% block content%}
+<div id="iframeBody">
+	<div class="backendSubMenu">
+		{% for type in subMenu %}
+		<button class="btn btn-outline-warning" onclick="changePage('{{mainType}}', '{{type.type}}');">{{type.typeName}}</button>
+		{% endfor%}
+	</div>
+	{% if data %}
+	<div>
+		<h2>{{ currentTypeName }}資料表</h2>
+		<table class="table table-dark" id="rawTable" border="1">
+				<tr class="table-danger">
+						<th>#</th>
+						<th>表單id</th>
+						<th>已閱讀</th>
+						<th>已確認</th>
+						<th>修改時間</th>
+						<th>修改</th>
+				</tr>
+				{% for row in data%}
+				<tr>
+						<td>{{row.messageid}}</td>
+						<td>{{row.formid_id}}</td>
+						<td>{{row.read}}</td>
+						<td>{{row.processed}}</td>
+						<td><script>document.write(new Date(Number({{row.lastUpdate}}) * 1000).toLocaleString());</script></td>
+						<td><span  onclick='putData({{ row.messageid }}, {{ row.formid_id }}, "{{row.processed}}", "{{mainType}}", "{{subType}}" )'>🛠️</span></td>
+				</tr>
+				{% endfor %}
+		</table>    
+	</div>
+	<br >
+	{% endif %}
+	<div id="formSet">     
+		<table class="table table-dark" id="putTable" border="1" style="display: none;">
+			<tr class="table-danger">
+						<th width="3%">#</th>
+						<th width="6%">公司</th>
+						<th width="6%">聯絡人</th>
+						<th width="8%">信箱</th>
+						<th width="10%">地址</th>
+						<th width="6%">電話</th>
+						<th width="10%">標題</th>
+						<th width="45%">內容</th>
+						<th width="6%">新增時間</th>
+			</tr>
+			<tr id="putData">
+			</tr>
+		</table>
+		<br >
+		<form id="putform" action="" method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            <fieldset>
+            <legend>修改{{ currentTypeName }}</legend>
+            <div class="form-switch">
+    			<input class="form-check-input" type="checkbox" role="switch" name="processed" id="putformProcessed" checked />
+    			<label class="form-check-label" for="putformEnable">已完成</label><br>
+			</div><br >
+			<input type="hidden"  name="id" id="putformId" />
+			<button class="btn btn-danger" type="submit" id="putformButton">送出</button>
+    		</fieldset>
+		</form>
+	</div>
+  <script> 
+  async function putData(id, formid, processed, mainType, subType) {
+    document.getElementById('putform').style.display = "block";
+    document.getElementById('putTable').style.display = "block";
+    document.getElementById('putformId').value = id;
+    document.getElementById('putformProcessed').checked = (processed === "True") ? true : false;
+    document.getElementById('putform').action = `/backend/${mainType}/${subType}/${id}/`
+    
+       
+    const response = await fetch(`/backend/{{mainType}}/form/${id}/${formid}/`, {
+      method: 'GET'
+    });
+    const data = await response.json();    
+    
+    let tr = document.getElementById('putData');
+    tr.innerHTML = '';
+    let td = document.createElement('td');
+    let value = document.createTextNode(data.formid);  
+    td.appendChild(value);
+    tr.appendChild(td);
+    td = document.createElement('td');
+    value = document.createTextNode(data.companyname);  
+    td.appendChild(value);
+    tr.appendChild(td);
+    td = document.createElement('td');
+    value = document.createTextNode(data.contactname);  
+    td.appendChild(value);
+    tr.appendChild(td);
+    td = document.createElement('td');
+    value = document.createTextNode(data.email);  
+    td.appendChild(value);
+    tr.appendChild(td);
+    td = document.createElement('td');
+    value = document.createTextNode(data.address);  
+    td.appendChild(value);
+    tr.appendChild(td);
+    td = document.createElement('td');
+    value = document.createTextNode(data.phone);  
+    td.appendChild(value);
+    tr.appendChild(td);
+    td = document.createElement('td');
+    value = document.createTextNode(data.title);  
+    td.appendChild(value);
+    tr.appendChild(td);
+    td = document.createElement('td');
+    value = document.createTextNode(data.content);  
+    td.appendChild(value);
+    tr.appendChild(td);
+    td = document.createElement('td');
+    let addtime = new Date(Number(data.addtime) * 1000).toLocaleString();
+    value = document.createTextNode(addtime);
+    td.appendChild(value);
+    tr.appendChild(td);
+  }
+
+</script>
+</div>
+{% endblock %}

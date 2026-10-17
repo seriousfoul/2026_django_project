@@ -1,0 +1,28 @@
+{% extends "front_template.htm" %}
+{% load static %}
+
+{% block title %}
+  <title>史打克工業 - 新聞內容</title>
+{% endblock %}	
+
+{% block content %}
+  <div id="topic">
+   <!-- 
+    新聞內容
+   -->
+   <table class="table table-sm table-dark" style="font-size:20px; text-align: center;" id="rawTable" >
+      <tr>
+        <th>標題</th><td colspan="3">{{news.title}}</td>
+      </tr>
+      <tr>
+        <th>新增時間</th>
+        <td><script>document.write(new Date(Number({{news.addtime}}) * 1000).toLocaleString());</script></td>
+        <th>更新時間</th>
+       <td><script>document.write(new Date(Number({{news.lastUpdate}}) * 1000).toLocaleString());</script></td>
+     </tr>
+     <tr class="table-Warning">
+			 <td colspan="4" style="padding: 1.3vh 0;"><pre>{{news.content}}</pre></td> 
+     </tr>
+  </table>
+  </div>  
+{% endblock %}	

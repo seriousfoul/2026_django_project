@@ -1,0 +1,28 @@
+{% extends "front_template.htm" %}
+{% load static %}
+
+{% block title%}
+  <title>史打克工業 - 特色</title>
+{% endblock%}	
+
+{% block content%}
+ 
+ <div class="features-container">
+  {% for topic in topics %}
+    {% if topic.featuretypeid != 3 %}
+    <div class="feature">
+      <div class="featureItem">     
+      <h2>{{topic.chinese_name}}</h2>
+      {% for row in features %}
+       	{% if row.topic == topic.featuretypeid%}
+        	<h3>{{row.title}}</h3>
+        	<pre>{{row.content}}</pre><br />
+        {% endif %}
+      {% endfor %}
+    </div>
+  </div>
+    
+   {% endif %}
+  {% endfor %}
+  </div>
+{% endblock%}	

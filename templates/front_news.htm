@@ -1,0 +1,84 @@
+{% extends "front_template.htm" %}
+{% load static %}
+
+{% block title%}
+  <title>史打克工業 - 新聞</title>  
+  <script>
+    function changeFrame(id) {
+      location.href = `/news/newsinfo/${id}`;
+    }
+    var newsList = {{news | safe}};
+    var pagelength = Math.ceil(newsList.length / 20);
+    var newNews = [];
+    var currentPage = 1;
+  </script>
+{% endblock%}	
+
+{% block content%}
+  <div id="topic">
+  	<table class="table table-sm table-dark" style="font-size:20px; text-align: center;" id="rawTable">
+    </table>
+  </div>
+  <br>
+  <div id="page"></div>
+  <script>
+  function newPageList(page = 1){
+    if (page === "<")
+      currentPage--;
+    else if( page === ">")
+      currentPage++;
+    else
+      currentPage = page;
+    
+    if (currentPage < 1)
+      currentPage = 1;
+		
+    if (currentPage > pagelength)
+      currentPage = pagelength;
+    
+    newNews = newsList.slice((currentPage-1) * 20, currentPage*20);
+    let table = document.getElementById("rawTable");
+    table.replaceChildren();
+    table.innerHTML += `
+    <tr>
+      <th width="10%">編號</th>
+      <th>標題</th>
+      <th width="15%">新增時間</th>
+      <th width="15%">更新時間</th>
+    </tr>
+    `;
+    let tr;
+    let td;    
+    for(let row of newNews){
+      tr = table.insertRow();
+      td = tr.insertCell();
+      td.textContent = row['newsid'];
+      td = tr.insertCell();
+      td.innerHTML = `<a href="#"  onclick=\"changeFrame(${row['newsid']})\">${row['title']}</a>`;
+      td = tr.insertCell();
+      td.textContent = new Date(Number(row['addtime']) * 1000).toLocaleString();
+      td = tr.insertCell();
+      td.textContent = new Date(Number(row['lastUpdate']) * 1000).toLocaleString();
+    }
+  }
+  newPageList();
+		
+	let pageObject = document.getElementById("page");
+	if (newsList.length >= 20){
+		let a = document.createElement("a");
+		a.onclick="newPageList('<')";
+		a.innerHTML = '〈';
+		pageObject.appendChild(a);
+		for (let i = 0; i < pagelength; i++){
+			a = document.createElement("a");
+			a.onclick = `"newPageList(${i})"`;
+			a.innerHTML = i+1;
+			pageObject.appendChild(a);
+		}
+		a = document.createElement("a");
+		a.onclick="newPageList('>')";
+		a.innerHTML = '〉';
+		pageObject.appendChild(a);
+	}
+</script>
+{% endblock%}	
