@@ -112,6 +112,6 @@ def __templates():
         brandSlogan = brandSlogans[random.randint(0, len(brandSlogans)-1)].content
     else:
         brandSlogan = ""
-    company = models.FeatureInfo.objects.all().first()
+    company = models.Company.objects.all().first()
     company = model_to_dict(company)
     return brandSlogan, company
