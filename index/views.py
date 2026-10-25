@@ -1,10 +1,9 @@
 from django.shortcuts import render
 import internal.models as models
-from datetime import datetime
 from django.http import JsonResponse
 import random
 from django.forms.models import model_to_dict
-
+import index.form as ValidForm
 
 # Create your views here.
 def Index(request):
@@ -86,23 +85,32 @@ def ContactUs(request):
     brandSlogan, company = __templates()
     return render(request, "front_contactus.htm", locals())
 
-def AddForm(request):    
-    companyname = request.POST['companyname']
-    contactname = request.POST['contactname']
-    email = request.POST['email']
-    address = request.POST['address']
-    phone = request.POST['phone']
-    title = request.POST['title']
-    content = request.POST['content']
-    record = models.Form.objects.create(companyname=companyname, contactname=contactname, email=email, address=address, phone=phone, title=title, content=content)
-    record.save()
-    record = models.Form.objects.all().order_by('-formid').first()
-    formId = record.formid
-    read = False
-    processed = False
-    record = models.Message.objects.create(formid_id=formId, read=read, processed=processed)
-    record.save()
-    msg = "insert success!"    
+def AddForm(request):
+    form = ValidForm.OrderForm(request.POST)
+    if form.is_valid():
+        companyname = request.POST['companyname']
+        contactname = request.POST['contactname']
+        email = request.POST['email']
+        address = request.POST['address']
+        phone = request.POST['phone']
+        title = request.POST['title']
+        content = request.POST['content']
+        record = models.Form.objects.create(companyname=companyname, contactname=contactname, email=email, address=address, phone=phone, title=title, content=content)
+        record.save()
+        record = models.Form.objects.all().order_by('-formid').first()
+        formId = record.formid
+        read = False
+        processed = False
+        record = models.Message.objects.create(formid_id=formId, read=read, processed=processed)
+        record.save()
+        msg = "insert success!" 
+    else:
+        formError = form.errors
+        error = ""
+        for e in formError.values:
+            error = error + e + " \t"
+        msg = error
+        form = ValidForm()
        
     return render(request, "front_contactus.htm", locals())
 

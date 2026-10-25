@@ -6,12 +6,12 @@ class Banner(models.Model):
     bannerid = models.AutoField(primary_key=True)
     name = models.CharField(max_length=30)
     imgpath = models.CharField(max_length=100, null=False)
-    enable = models.BooleanField(default=True)
+    enable = models.BooleanField(default=True, null=False)
     addtime = models.BigIntegerField(editable=False)
     
     def save(self, *args, **kwargs):
         now = int(time.time())
-        # self.lastUpdate = now     
+        # self.lastUpdate = now
         
         if not self.pk:
             self.addtime = now
@@ -23,7 +23,7 @@ class Info(models.Model):
     infoid = models.AutoField(primary_key=True)
     title = models.CharField(max_length=30, null=False)
     imgpath = models.CharField(max_length=100, null=False)
-    enable = models.BooleanField(default=True)
+    enable = models.BooleanField(default=True, null=False)
     addtime = models.BigIntegerField(editable=False) 
     
     def save(self, *args, **kwargs):
@@ -56,8 +56,8 @@ class History(models.Model):
 class FeatureType(models.Model):    
     featuretypeid = models.AutoField(primary_key=True)
     name = models.CharField(max_length=30, null=False)
-    chinese_name = models.TextField(null=False)
-    enable = models.BooleanField(default=True)
+    chinese_name = models.CharField(max_length=30, null=False)
+    enable = models.BooleanField(default=True, null=False)
         
     
 class FeatureInfo(models.Model):    
@@ -81,7 +81,7 @@ class FeatureInfo(models.Model):
 class Category(models.Model):    
     categoryid = models.AutoField(primary_key=True)
     name = models.CharField(max_length=30, null=False)
-    enable = models.BooleanField(default=True)
+    enable = models.BooleanField(default=True, null=False)
 
 class Item(models.Model):    
     itemid = models.AutoField(primary_key=True)
@@ -89,7 +89,7 @@ class Item(models.Model):
     imgpath = models.CharField(max_length=100)
     dimension = models.TextField(null=False)
     material = models.CharField(max_length=100, null=False)
-    info = models.TextField(null=False)
+    info = models.TextField()
     categoryid = models.ForeignKey('Category', on_delete=models.CASCADE)
     addtime = models.BigIntegerField(editable=False)
     lastUpdate = models.BigIntegerField(editable=False)
@@ -123,7 +123,7 @@ class News(models.Model):
 
 class Faq(models.Model):    
     faqid = models.AutoField(primary_key=True)
-    question = models.CharField(max_length=200, null=False)
+    question = models.TextField(max_length=200, null=False)
     answer = models.TextField(null=False)
     addtime = models.BigIntegerField(editable=False)
     lastUpdate = models.BigIntegerField(editable=False)
@@ -144,7 +144,7 @@ class Downloads(models.Model):
     filepath = models.CharField(max_length=100, null=False)
     size = models.CharField(max_length=30, null=False)
     version = models.CharField(max_length=30, null=False)
-    info = models.TextField(null=False)
+    info = models.TextField()
     addtime = models.BigIntegerField(editable=False)
     lastUpdate = models.BigIntegerField(editable=False)
 
@@ -164,17 +164,17 @@ class Company(models.Model):
     address = models.CharField(max_length=100, null=False)
     phone = models.CharField(max_length=20, null=False)
     fax = models.CharField(max_length=20)  
-    servicetime = models.TextField(null=False)
+    servicetime = models.TextField()
 
 class Form(models.Model):    
     formid = models.AutoField(primary_key=True)
     companyname = models.CharField(max_length=30)
-    contactname = models.CharField(max_length=10)
+    contactname = models.CharField(max_length=10, null=False)
     email = models.CharField(max_length=100, null=False)
     address = models.CharField(max_length=100, null=False)
     phone = models.CharField(max_length=20, null=False)
     title = models.CharField(max_length=30, null=False)
-    content = models.TextField(null=False)
+    content = models.TextField()
     addtime = models.BigIntegerField()
 
     def save(self, *args, **kwargs):
@@ -190,8 +190,8 @@ class Form(models.Model):
 class Message(models.Model):    
     messageid = models.AutoField(primary_key=True)
     formid = models.ForeignKey('Form', on_delete=models.CASCADE)
-    read = models.BooleanField(default=False)
-    processed = models.BooleanField(default=False)
+    read = models.BooleanField(default=False, null=False)
+    processed = models.BooleanField(default=False, null=False)
     lastUpdate = models.BigIntegerField()
     
     def save(self, *args, **kwargs):

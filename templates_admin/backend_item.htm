@@ -20,19 +20,19 @@
 				<legend>新增{{ currentTypeName }}</legend>
 				<div class="mb-3">
 					<label class="form-label" for="topic">種類：</label>
-					<select name="categoryid">
+					<select name="categoryid" required>
 					{% for topic in topics %}
 						<option value="{{topic.    }}">{{topic.name}}</option>
 					{% endfor %}
 					</select><br>
 					<label class="form-label" for="name">名稱：</label>
-					<input class="form-control" name="name" required/><br>
+					<input class="form-control" name="name" maxlength="30" required/><br>
 					<label class="form-label" for="image">圖片：</label>
-					<input class="form-control" type="file" name="image" /><br>
+					<input class="form-control" type="file" name="image" required/><br>
 					<label class="form-label" for="dimension">尺寸：</label>
 					<textarea class="form-control" name="dimension" rows="5" cols="50" required></textarea>
 					<label class="form-label" for="material">材質：</label>
-					<input class="form-control" name="material" required/><br>
+					<input class="form-control" name="material" maxlength="100" required/><br>
 					<label class="form-label" for="info">備註：</label><br>
 					<textarea class="form-control" name="info" rows="10" cols="50" ></textarea><br>            
 				</div>          
@@ -83,7 +83,7 @@
 				<legend>修改{{ currentTypeName }}</legend>
 				<div class="mb-3">
 					<label class="form-label" for="topic">種類：</label>
-					<select name="categoryid" id="putformTopic">
+					<select name="categoryid" id="putformTopic" required>
 					{% for topic in topics %}
 						<option value="{{topic.categoryid}}">{{topic.name}}</option>
 					{% endfor %}
@@ -91,7 +91,7 @@
 				</div>
 				<div class="mb-3">
 					<label class="form-label" for="putformName">名稱：</label>
-					<input class="form-control" name="name" id="putformName" /><br>
+					<input class="form-control" name="name" id="putformName" maxlength="30" required/><br>
 				</div>
 				<div class="mb-3">
 					<label class="form-label" for="putformImage">圖片：</label>
@@ -99,11 +99,11 @@
 				</div>
 				<div class="mb-3">
 					<label class="form-label" for="putformDimension">尺寸：</label>
-					<textarea class="form-control" name="dimension" id="putformDimension" rows="10" cols="50"></textarea><br>
+					<textarea class="form-control" name="dimension" id="putformDimension" rows="10" cols="50" required></textarea><br>
 				</div>
 				<div class="mb-3">
 					<label class="form-label" for="putformMaterial">材質：</label>
-					<input class="form-control" name="material" id="putformMaterial" /><br>
+					<input class="form-control" name="material" id="putformMaterial" maxlength="100" required/><br>
 				</div>
 				<div class="mb-3">
 					<label class="form-label" for="putformInfo">備註：</label><br>

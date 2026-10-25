@@ -6,6 +6,7 @@ from django.core.files.storage import FileSystemStorage
 from django.http import JsonResponse
 from django.forms.models import model_to_dict
 import os
+import backend.form as ValidForm
 
 pageTypeName = {
     "index":"首頁設定",
@@ -64,23 +65,33 @@ for typeName, subTypeList in pageSubType.items():
 # Create your views here.
 def Banner(request, bannerId :int=0, actionType :str=None):
     if request.method == "POST":
-        if actionType == "put" and bannerId > 0:
-            record = models.Banner.objects.get(bannerid=bannerId)
-            record.name = request.POST['name']
-            record.enable = True if request.POST.get('enable') is not None and request.POST.get('enable').lower() == "true" else False
-            record.save()
-            msg = "update success!"
-        else:            
-            if request.FILES.get('image') and request.FILES.get('image').size() > 0 :
-                imgName = __SaveFile(request.FILES.get('image',''), request.POST['name'], ".webp")
-                imgPath = "/media/" + imgName
-            else:
-                imgPath = ""
-            name = request.POST['name']
-            enable = True if request.POST.get('enable') is not None and request.POST.get('enable').lower() == "true" else False
-            record = models.Banner.objects.create(name=name, imgpath=imgPath, enable=enable)
-            record.save()
-            msg = "insert success!"
+        form = ValidForm.Banner(request.POST, request.FILES)
+        if form.is_valid():
+            if actionType == "put" and bannerId > 0:
+                record = models.Banner.objects.get(bannerid=bannerId)
+                record.name = request.POST['name']
+                record.enable = True if request.POST.get('enable') is not None and request.POST.get('enable').lower() == "true" else False
+                record.save()
+                msg = "update success!"
+            else:            
+                if request.FILES.get('image') :
+                    imgName = __SaveFile(request.FILES.get('image',''), request.POST['name'], ".webp")
+                    imgPath = "/media/" + imgName
+                else:
+                    imgPath = ""
+                name = request.POST['name']
+                enable = True if request.POST.get('enable') is not None and request.POST.get('enable').lower() == "true" else False
+                record = models.Banner.objects.create(name=name, imgpath=imgPath, enable=enable)
+                record.save()
+                msg = "insert success!"
+                
+        else:
+            formError = form.errors
+            error = ""
+            for e in formError.values:
+                error = error + e + " \t"
+            msg = error
+            form = ValidForm()
     else:
         if actionType == "delete" and bannerId > 0:
             record = models.Banner.objects.get(bannerid=bannerId)
@@ -100,23 +111,32 @@ def Banner(request, bannerId :int=0, actionType :str=None):
 
 def Info(request, infoId :int=0, actionType :str=None):
     if request.method == "POST":
-        if actionType == "put" and infoId > 0:            
-            record = models.Info.objects.get(infoid=infoId)
-            record.title = request.POST['title']
-            record.enable = True if request.POST.get('enable') is not None and request.POST.get('enable').lower() == "true" else False
-            record.save()
-            msg = "update success!"
-        else:                  
-            if request.FILES.get('image') and request.FILES.get('image').size() > 0:
-                imgName = __SaveFile(request.FILES.get('image',''), request.POST['title'], ".webp")
-                imgPath = "/media/" + imgName
-            else:
-                imgPath = ""
-            title = request.POST['title']
-            enable = True if request.POST.get('enable') is not None and request.POST.get('enable').lower() == "true" else False
-            record = models.Info.objects.create(title=title, imgpath=imgPath, enable=enable)
-            record.save()
-            msg = "insert success!"
+        form = ValidForm.Info(request.POST, request.FILES)
+        if form.is_valid():
+            if actionType == "put" and infoId > 0:            
+                record = models.Info.objects.get(infoid=infoId)
+                record.title = request.POST['title']
+                record.enable = True if request.POST.get('enable') is not None and request.POST.get('enable').lower() == "true" else False
+                record.save()
+                msg = "update success!"
+            else:                  
+                if request.FILES.get('image') and request.FILES.get('image').size() > 0:
+                    imgName = __SaveFile(request.FILES.get('image',''), request.POST['title'], ".webp")
+                    imgPath = "/media/" + imgName
+                else:
+                    imgPath = ""
+                title = request.POST['title']
+                enable = True if request.POST.get('enable') is not None and request.POST.get('enable').lower() == "true" else False
+                record = models.Info.objects.create(title=title, imgpath=imgPath, enable=enable)
+                record.save()
+                msg = "insert success!"
+        else:
+            formError = form.errors
+            error = ""
+            for e in formError.values:
+                error = error + e + " \t"
+            msg = error
+            form = ValidForm()
     else:
         if actionType == "delete" and infoId > 0:
             record = models.Info.objects.get(infoid=infoId)
@@ -135,18 +155,27 @@ def Info(request, infoId :int=0, actionType :str=None):
 
 def History(request, historyId :int=0, actionType :str=None):
     if request.method == "POST":
-        if actionType == "put" and historyId > 0:            
-            record = models.History.objects.get(historyid=historyId)
-            record.title = request.POST['title']
-            record.content = request.POST['content']
-            record.save()
-            msg = "update success!"
-        else:            
-            title = request.POST['title']
-            content = request.POST['content']
-            record = models.History.objects.create(title=title, content=content)
-            record.save()
-            msg = "insert success!"
+        form = ValidForm.History(request.POST)
+        if form.is_valid():
+            if actionType == "put" and historyId > 0:            
+                record = models.History.objects.get(historyid=historyId)
+                record.title = request.POST['title']
+                record.content = request.POST['content']
+                record.save()
+                msg = "update success!"
+            else:            
+                title = request.POST['title']
+                content = request.POST['content']
+                record = models.History.objects.create(title=title, content=content)
+                record.save()
+                msg = "insert success!"
+        else:
+            formError = form.errors
+            error = ""
+            for e in formError.values:
+                error = error + e + " \t"
+            msg = error
+            form = ValidForm()
     else:
         if actionType == "delete" and historyId > 0:
             record = models.History.objects.get(historyid=historyId)
@@ -165,20 +194,29 @@ def History(request, historyId :int=0, actionType :str=None):
 
 def FeatureType(request, featureTypeId :int=0, actionType :str=None):
     if request.method == "POST":
-        if actionType == "put" and featureTypeId > 0:
-            record = models.FeatureType.objects.get(featuretypeid=featureTypeId)
-            record.name = request.POST['name']
-            record.chinese_name = request.POST['chineseName']
-            record.enable = True if request.POST.get('enable') is not None and request.POST.get('enable').lower() == "true" else False
-            record.save()
-            msg = "update success!"
-        else:                 
-            name = request.POST['name']
-            chinese_name = request.POST['chineseName']
-            enable = True if request.POST.get('enable') is not None and request.POST.get('enable').lower() == "true" else False
-            record = models.FeatureType.objects.create(name=name, chinese_name=chinese_name, enable=enable)
-            record.save()
-            msg = "insert success!"
+        form = ValidForm.FeatureType(request.POST)
+        if form.is_valid():
+            if actionType == "put" and featureTypeId > 0:
+                record = models.FeatureType.objects.get(featuretypeid=featureTypeId)
+                record.name = request.POST['name']
+                record.chinese_name = request.POST['chineseName']
+                record.enable = True if request.POST.get('enable') is not None and request.POST.get('enable').lower() == "true" else False
+                record.save()
+                msg = "update success!"
+            else:                 
+                name = request.POST['name']
+                chinese_name = request.POST['chineseName']
+                enable = True if request.POST.get('enable') is not None and request.POST.get('enable').lower() == "true" else False
+                record = models.FeatureType.objects.create(name=name, chinese_name=chinese_name, enable=enable)
+                record.save()
+                msg = "insert success!"
+        else:
+            formError = form.errors
+            error = ""
+            for e in formError.values:
+                error = error + e + " \t"
+            msg = error
+            form = ValidForm()
     else:
         if actionType == "delete" and featureTypeId > 0:
             record = models.FeatureType.objects.get(featuretypeid=featureTypeId)
@@ -198,20 +236,29 @@ def FeatureType(request, featureTypeId :int=0, actionType :str=None):
 
 def FeatureInfo(request, featureInfoId :int=0, actionType :str=None):
     if request.method == "POST":
-        if actionType == "put" and featureInfoId > 0:            
-            record = models.FeatureInfo.objects.get(featureinfoid=featureInfoId)
-            record.topic_id = eval(request.POST['topic'])
-            record.title = request.POST['title']
-            record.content = request.POST['content']
-            record.save()
-            msg = "update success!"
+        form = ValidForm.FeatureInfo(request.POST)
+        if form.is_valid():
+            if actionType == "put" and featureInfoId > 0:            
+                record = models.FeatureInfo.objects.get(featureinfoid=featureInfoId)
+                record.topic_id = eval(request.POST['topic'])
+                record.title = request.POST['title']
+                record.content = request.POST['content']
+                record.save()
+                msg = "update success!"
+            else:
+                topic = eval(request.POST['topic'])
+                title = request.POST['title']
+                content = request.POST['content']
+                record = models.FeatureInfo.objects.create(topic_id=topic, title=title, content=content)
+                record.save()
+                msg = "insert success!"
         else:
-            topic = eval(request.POST['topic'])
-            title = request.POST['title']
-            content = request.POST['content']
-            record = models.FeatureInfo.objects.create(topic_id=topic, title=title, content=content)
-            record.save()
-            msg = "insert success!"
+            formError = form.errors
+            error = ""
+            for e in formError.values:
+                error = error + e + " \t"
+            msg = error
+            form = ValidForm()        
     else:
         if actionType == "delete" and featureInfoId > 0:
             record = models.FeatureInfo.objects.get(featureinfoid=featureInfoId)
@@ -233,18 +280,27 @@ def FeatureInfo(request, featureInfoId :int=0, actionType :str=None):
 
 def Category(request, categoryId :int=0, actionType :str=None):
     if request.method == "POST":
-        if actionType == "put" and categoryId > 0:
-            record = models.Category.objects.get(categoryid=categoryId)
-            record.name = request.POST['name']
-            record.enable = True if request.POST.get('enable') is not None and request.POST.get('enable').lower() == "true" else False
-            record.save()
-            msg = "update success!"
-        else:                 
-            name = request.POST['name']
-            enable = True if request.POST.get('enable') is not None and request.POST.get('enable').lower() == "true" else False
-            record = models.Category.objects.create(name=name, enable=enable)
-            record.save()
-            msg = "insert success!"
+        form = ValidForm.Category(request.POST)
+        if form.is_valid():
+            if actionType == "put" and categoryId > 0:
+                record = models.Category.objects.get(categoryid=categoryId)
+                record.name = request.POST['name']
+                record.enable = True if request.POST.get('enable') is not None and request.POST.get('enable').lower() == "true" else False
+                record.save()
+                msg = "update success!"
+            else:                 
+                name = request.POST['name']
+                enable = True if request.POST.get('enable') is not None and request.POST.get('enable').lower() == "true" else False
+                record = models.Category.objects.create(name=name, enable=enable)
+                record.save()
+                msg = "insert success!"
+        else:
+            formError = form.errors
+            error = ""
+            for e in formError.values:
+                error = error + e + " \t"
+            msg = error
+            form = ValidForm() 
     else:
         if actionType == "delete" and categoryId > 0:
             record = models.Category.objects.get(categoryid=categoryId)
@@ -263,36 +319,45 @@ def Category(request, categoryId :int=0, actionType :str=None):
 
 def Item(request, itemId :int=0, actionType :str=None):
     if request.method == "POST":
-        if actionType == "put" and itemId > 0:            
-            record = models.Item.objects.get(itemid=itemId)
-            if request.FILES.get('image') and request.FILES.get('image').size() > 0 :                
-                if record.imgpath != None:
-                    __DeleteFile(record.imgpath)
-                imgName = __SaveFile(request.FILES.get('image',''), request.POST['name'], ".webp")                
-                record.imgPath = "/media/" + imgName
-            else:
-                record.imgpath = ""
-            record.name = request.POST['name']
-            record.dimension = request.POST['dimension']
-            record.material = request.POST['material']
-            record.info = request.POST['info']
-            record.categoryid_id = request.POST['categoryid']
-            record.save()
-            msg = "update success!"
-        else:           
-           if request.FILES.get('image') and request.FILES.get('image').size() > 0:
-               imgName = __SaveFile(request.FILES.get('image',''), request.POST['name'], ".webp")
-               imgPath = "/media/" + imgName
-           else:
-               imgPath = ""
-           name = request.POST['name']
-           dimension = request.POST['dimension']
-           material = request.POST['material']
-           info = request.POST['dimension']
-           categoryid = request.POST['categoryid']
-           record = models.Item.objects.create(name=name, imgpath=imgPath, dimension=dimension, material=material, info=info, categoryid_id=categoryid)
-           record.save()
-           msg = "insert success!"
+        form = ValidForm.Item(request.POST, request.FILES)
+        if form.is_valid():
+            if actionType == "put" and itemId > 0:            
+                record = models.Item.objects.get(itemid=itemId)
+                if request.FILES.get('image') and request.FILES.get('image').size() > 0 :                
+                    if record.imgpath != None:
+                        __DeleteFile(record.imgpath)
+                    imgName = __SaveFile(request.FILES.get('image',''), request.POST['name'], ".webp")                
+                    record.imgPath = "/media/" + imgName
+                else:
+                    record.imgpath = ""
+                record.name = request.POST['name']
+                record.dimension = request.POST['dimension']
+                record.material = request.POST['material']
+                record.info = request.POST['info']
+                record.categoryid_id = request.POST['categoryid']
+                record.save()
+                msg = "update success!"
+            else:           
+               if request.FILES.get('image') and request.FILES.get('image').size() > 0:
+                   imgName = __SaveFile(request.FILES.get('image',''), request.POST['name'], ".webp")
+                   imgPath = "/media/" + imgName
+               else:
+                   imgPath = ""
+               name = request.POST['name']
+               dimension = request.POST['dimension']
+               material = request.POST['material']
+               info = request.POST['dimension']
+               categoryid = request.POST['categoryid']
+               record = models.Item.objects.create(name=name, imgpath=imgPath, dimension=dimension, material=material, info=info, categoryid_id=categoryid)
+               record.save()
+               msg = "insert success!"
+        else:
+            formError = form.errors
+            error = ""
+            for e in formError.values:
+                error = error + e + " \t"
+            msg = error
+            form = ValidForm()
     else:
         if actionType == "delete" and itemId > 0:
             
@@ -314,19 +379,28 @@ def Item(request, itemId :int=0, actionType :str=None):
     return render(request, "backend_item.htm", locals())
 
 def News(request, newsId :int=0, actionType :str=None):
-    if request.method == "POST":
-        if actionType == "put" and newsId > 0:            
-            record = models.News.objects.get(newsid=newsId)
-            record.title = request.POST['title']
-            record.content = request.POST['content']
-            record.save()
-            msg = "update success!"
+    form = ValidForm.News(request.POST)
+    if form.is_valid():
+        if request.method == "POST":
+            if actionType == "put" and newsId > 0:            
+                record = models.News.objects.get(newsid=newsId)
+                record.title = request.POST['title']
+                record.content = request.POST['content']
+                record.save()
+                msg = "update success!"
+            else:
+                title = request.POST['title']
+                content = request.POST['content']
+                record = models.News.objects.create(title=title, content=content)
+                record.save()
+                msg = "insert success!"
         else:
-            title = request.POST['title']
-            content = request.POST['content']
-            record = models.News.objects.create(title=title, content=content)
-            record.save()
-            msg = "insert success!"
+            formError = form.errors
+            error = ""
+            for e in formError.values:
+                error = error + e + " \t"
+            msg = error
+            form = ValidForm()
     else:
         if actionType == "delete" and newsId > 0:
             record = models.News.objects.get(newsid=newsId)
@@ -346,18 +420,27 @@ def News(request, newsId :int=0, actionType :str=None):
 
 def Faq(request, faqId :int=0, actionType :str=None):
     if request.method == "POST":
-        if actionType == "put" and faqId > 0:              
-            record = models.Faq.objects.get(faqid=faqId)
-            record.question = request.POST['question']
-            record.answer = request.POST['answer']
-            record.save()
-            msg = "update success!"
+        form = ValidForm.Faq(request.POST)
+        if form.is_valid():
+            if actionType == "put" and faqId > 0:              
+                record = models.Faq.objects.get(faqid=faqId)
+                record.question = request.POST['question']
+                record.answer = request.POST['answer']
+                record.save()
+                msg = "update success!"
+            else:
+                question = request.POST['question']
+                answer = request.POST['answer']
+                record = models.Faq.objects.create(question=question, answer=answer)
+                record.save()
+                msg = "insert success!"
         else:
-            question = request.POST['question']
-            answer = request.POST['answer']
-            record = models.Faq.objects.create(question=question, answer=answer)
-            record.save()
-            msg = "insert success!"
+            formError = form.errors
+            error = ""
+            for e in formError.values:
+                error = error + e + " \t"
+            msg = error
+            form = ValidForm()
     else:
         if actionType == "delete" and faqId > 0:
             record = models.Faq.objects.get(faqid=faqId)
@@ -375,31 +458,40 @@ def Faq(request, faqId :int=0, actionType :str=None):
     return render(request, "backend_faq.htm", locals())
 
 
-def Downloads(request, downloadsId :int=0, actionType :str=None):
+def Downloads(request, downloadsId :int=0, actionType :str=None):    
     if request.method == "POST":
-        if actionType == "put" and downloadsId > 0:            
-            record = models.Downloads.objects.get(downloadsid=downloadsId)
-            if request.FILES.get('pdf') and request.FILES.get('pdf').size() > 0:                
-                if record.filepath != None:
-                    __DeleteFile(record.filepath)
-                fileName = __SaveFile(request.FILES.get('pdf'), request.POST['name'], ".pdf")        
-                record.filepath = "/media/" + fileName
-                record.size = __fileSize(request.FILES.get('pdf','').size)             
-            record.name = request.POST['name']            
-            record.version = request.POST['version']
-            record.info = request.POST['info']
-            record.save()
-            msg = "update success!"
-        else: 
-            fileName = __SaveFile(request.FILES.get('pdf',''), request.POST['name'], ".pdf")                
-            filePath = "/media/" + fileName
-            name = request.POST['name']
-            size = __fileSize(request.FILES.get('pdf','').size)
-            version = request.POST['version']
-            info = request.POST['info']
-            record = models.Downloads.objects.create(name=name, filepath=filePath, size=size, version=version, info=info)
-            record.save()
-            msg = "insert success!"
+        form = ValidForm.Downloads(request.POST, request.FILES)
+        if form.is_valid():
+            if actionType == "put" and downloadsId > 0:            
+                record = models.Downloads.objects.get(downloadsid=downloadsId)
+                if request.FILES.get('pdf') and request.FILES.get('pdf').size() > 0:                
+                    if record.filepath != None:
+                        __DeleteFile(record.filepath)
+                    fileName = __SaveFile(request.FILES.get('pdf'), request.POST['name'], ".pdf")        
+                    record.filepath = "/media/" + fileName
+                    record.size = __fileSize(request.FILES.get('pdf','').size)             
+                record.name = request.POST['name']            
+                record.version = request.POST['version']
+                record.info = request.POST['info']
+                record.save()
+                msg = "update success!"
+            else: 
+                fileName = __SaveFile(request.FILES.get('pdf',''), request.POST['name'], ".pdf")                
+                filePath = "/media/" + fileName
+                name = request.POST['name']
+                size = __fileSize(request.FILES.get('pdf','').size)
+                version = request.POST['version']
+                info = request.POST['info']
+                record = models.Downloads.objects.create(name=name, filepath=filePath, size=size, version=version, info=info)
+                record.save()
+                msg = "insert success!"
+        else:
+            formError = form.errors
+            error = ""
+            for e in formError.values:
+                error = error + e + " \t"
+            msg = error
+            form = ValidForm()
     else:
         if actionType == "delete" and downloadsId > 0:
             record = models.Downloads.objects.get(downloadsid=downloadsId)
@@ -416,31 +508,40 @@ def Downloads(request, downloadsId :int=0, actionType :str=None):
     currentTypeName = pageTypeName[subType]    
     return render(request, "backend_downloads.htm", locals())    
 
-def Company(request, actionType :str=None):
+def Company(request, actionType :str=None):    
     if request.method == "POST":
-        record = models.Company.objects.all().first()
-        if actionType == "put":
-            record.name = request.POST['name']
-            record.email = request.POST['email']
-            record.address = request.POST['address']
-            record.phone = request.POST['phone']
-            record.fax = request.POST['fax']
-            record.servicetime = request.POST['servicetime']
-            record.save()
-            msg = "update success!"
-        else:
-            if not record:
-                name = request.POST['name']
-                email = request.POST['email']
-                address = request.POST['address']
-                phone = request.POST['phone']
-                fax = request.POST['fax']
-                servicetime = request.POST['servicetime']
-                record = models.Company.objects.create(name=name, email=email, address=address, phone=phone, fax=fax, servicetime=servicetime)
+        form = ValidForm.Company(request.POST)
+        if form.is_valid():
+            record = models.Company.objects.all().first()
+            if actionType == "put":
+                record.name = request.POST['name']
+                record.email = request.POST['email']
+                record.address = request.POST['address']
+                record.phone = request.POST['phone']
+                record.fax = request.POST['fax']
+                record.servicetime = request.POST['servicetime']
                 record.save()
-                msg = "insert success!"
+                msg = "update success!"
             else:
-                msg = "company's data is exist"
+                if not record:
+                    name = request.POST['name']
+                    email = request.POST['email']
+                    address = request.POST['address']
+                    phone = request.POST['phone']
+                    fax = request.POST['fax']
+                    servicetime = request.POST['servicetime']
+                    record = models.Company.objects.create(name=name, email=email, address=address, phone=phone, fax=fax, servicetime=servicetime)
+                    record.save()
+                    msg = "insert success!"
+                else:
+                    msg = "company's data is exist"
+        else:
+            formError = form.errors
+            error = ""
+            for e in formError.values:
+                error = error + e + " \t"
+            msg = error
+            form = ValidForm()
 
     query = models.Company.objects.all().first()
     data = query
@@ -467,10 +568,19 @@ def GetForm(request, messageId :int=0, formId :int=0):
 
 def Message(request, messageId :int=0):
     if request.method == "POST" and messageId > 0:
-        record = models.Message.objects.get(messageid=messageId)
-        record.processed = True if request.POST.get('processed') is not None and request.POST.get('processed').lower() == "on" else False
-        record.save()
-        msg = "update success!" 
+        form = ValidForm.Message(request.POST)
+        if form.is_valid():
+            record = models.Message.objects.get(messageid=messageId)
+            record.processed = True if request.POST.get('processed') is not None and request.POST.get('processed').lower() == "on" else False
+            record.save()
+            msg = "update success!" 
+        else:
+            formError = form.errors
+            error = ""
+            for e in formError.values:
+                error = error + e + " \t"
+            msg = error
+            form = ValidForm()
     
     data = models.Message.objects.all()
     

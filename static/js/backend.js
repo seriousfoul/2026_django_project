@@ -1,5 +1,7 @@
 function deleteData(id, mainType, subType) {
-   location.href = `/backend/${mainType}/${subType}/${id}/delete/`;
+	let msg = '確定進行刪除?';
+	if(confirm(msg) == true)
+   	location.href = `/backend/${mainType}/${subType}/${id}/delete/`;
 }
 
 

@@ -20,14 +20,12 @@
 		</div>
 	</div>
 </body>
-<script>
-    window.addEventListener("message", function(event) {
-        if (event.data.msg) {
-            alert(event.data.msg);
-        }
-        if (event.data.route){
-            document.getElementById("page").src = event.data.route;
-        }
-    });
+<script>    
+    var msg = {% if msg %} "{{msg}}" {% else %} null {% endif %};
+    if (msg){
+				console.log("成功執行：", msg);
+        alert(msg);
+        msg = null;
+    }
 </script>
 </html>
