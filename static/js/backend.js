@@ -12,3 +12,7 @@ function changePage(mainType, subType) {
 function changeIndex(mainType) {
    location.href = `/backend/${mainType}/`;
 }
+
+function logout() {
+    location.href = `/backend/logout/`;
+}

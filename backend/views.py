@@ -1,12 +1,18 @@
-from django.shortcuts import render,redirect
+from django.shortcuts import render, redirect
 import internal.models as models
 from datetime import datetime
 import hashlib
 from django.core.files.storage import FileSystemStorage
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.forms.models import model_to_dict
 import os
 import backend.form as ValidForm
+import time
+from functools import wraps
+from smtplib import SMTP, SMTPAuthenticationError
+from email.mime.text import MIMEText
+from django.conf import settings
+
 
 pageTypeName = {
     "index":"首頁設定",
@@ -35,8 +41,10 @@ pageMainType = [
     "news", 
     "faq", 
     "downloads", 
-    "contactUs" 
+    "contactUs",
+
     ]
+#     "login"
 
 pageSubType = {
     "index" : ["banner", "info", "history"],
@@ -45,9 +53,10 @@ pageSubType = {
     "news": ["news"],
     "faq": ["faq"],
     "downloads": ["downloads"],
-    "contactUs": ["company", "message"]
-    }
+    "contactUs": ["company", "message"],
 
+    }
+#     "login": ["login", "validateCookie"]
 typeData = {}
 for mainType in pageMainType:   
     typeData[mainType] = pageTypeName.get(mainType)
@@ -62,7 +71,64 @@ for typeName, subTypeList in pageSubType.items():
             })
     subTypeData[typeName] = subType
 
+
+approvalOrderSubject = "史打客工業-您的訂單已完成審核"
+approvalOrderContent = """
+<h2>親愛的顧客您好<h2>
+<h4>
+您的訂單已完成審核，之後會有專員跟您聯絡。<br />
+感謝您對史打客工業產品的支持。
+</h4>
+"""
+
+def ValidateCookie(view_func):
+    @wraps(view_func)
+    def wrapper(request, *args, **kwargs):
+        nowTime = int(time.time())
+        expirationTime = 7 * 2 * 24 * 60 * 60
+        
+        if 'StarkWebAccount' in request.COOKIES and 'StarkWebToken' in request.COOKIES:
+            cookieAccount = request.COOKIES['StarkWebAccount']
+            cookieToken = request.COOKIES['StarkWebToken']
+            
+            userRecord = models.Employee.objects.filter(account=cookieAccount).first()
+            if userRecord is not None:
+                userTokenRecord = models.LoginToken.objects.filter(employeeid_id = userRecord.employeeid).order_by('-tokenTime').first()
+                userLoginRecord = models.Login.objects.filter(employeeid_id = userRecord.employeeid).order_by('-loginTime').first()
+                
+                if userTokenRecord is not None and userTokenRecord.token == cookieToken:
+                    
+                    if userTokenRecord.tokenTime + expirationTime < nowTime:
+                        if userLoginRecord is not None and userLoginRecord.logoutTime is None:
+                            userLoginRecord.logoutTime = nowTime
+                            userLoginRecord.save()
+                            
+                        userTokenRecord.delete()
+                        userTokenRecord.save()  
+                        respone = redirect("/login/")
+                        respone.delete_cookie('StarkWebAccount')
+                        respone.delete_cookie('StarkWebToken')
+                        
+                        return respone
+                    else:                   
+                        if userLoginRecord is not None and userLoginRecord.logoutTime is not None:
+                            respone = redirect("/login/")
+                            respone.delete_cookie('StarkWebAccount')
+                            respone.delete_cookie('StarkWebToken')
+                            
+                            return respone
+                        return view_func(request, *args, **kwargs)
+
+        respone = redirect("/login/")
+        respone.delete_cookie('StarkWebAccount')
+        respone.delete_cookie('StarkWebToken')
+        
+        return respone
+
+    return wrapper
+
 # Create your views here.
+@ValidateCookie
 def Banner(request, bannerId :int=0, actionType :str=None):
     if request.method == "POST":
         form = ValidForm.Banner(request.POST, request.FILES)
@@ -88,10 +154,10 @@ def Banner(request, bannerId :int=0, actionType :str=None):
         else:
             formError = form.errors
             error = ""
-            for e in formError.values:
+            for e in formError.values():
                 error = error + e + " \t"
             msg = error
-            form = ValidForm()
+            form = ValidForm.Banner()
     else:
         if actionType == "delete" and bannerId > 0:
             record = models.Banner.objects.get(bannerid=bannerId)
@@ -109,6 +175,7 @@ def Banner(request, bannerId :int=0, actionType :str=None):
     
     return render(request, "backend_banner.htm", locals())
 
+@ValidateCookie
 def Info(request, infoId :int=0, actionType :str=None):
     if request.method == "POST":
         form = ValidForm.Info(request.POST, request.FILES)
@@ -133,10 +200,10 @@ def Info(request, infoId :int=0, actionType :str=None):
         else:
             formError = form.errors
             error = ""
-            for e in formError.values:
+            for e in formError.values():
                 error = error + e + " \t"
             msg = error
-            form = ValidForm()
+            form = ValidForm.Info()
     else:
         if actionType == "delete" and infoId > 0:
             record = models.Info.objects.get(infoid=infoId)
@@ -153,6 +220,7 @@ def Info(request, infoId :int=0, actionType :str=None):
     currentTypeName = pageTypeName[subType]
     return render(request, "backend_info.htm", locals())
 
+@ValidateCookie
 def History(request, historyId :int=0, actionType :str=None):
     if request.method == "POST":
         form = ValidForm.History(request.POST)
@@ -172,10 +240,10 @@ def History(request, historyId :int=0, actionType :str=None):
         else:
             formError = form.errors
             error = ""
-            for e in formError.values:
+            for e in formError.values():
                 error = error + e + " \t"
             msg = error
-            form = ValidForm()
+            form = ValidForm.History()
     else:
         if actionType == "delete" and historyId > 0:
             record = models.History.objects.get(historyid=historyId)
@@ -192,6 +260,7 @@ def History(request, historyId :int=0, actionType :str=None):
     currentTypeName = pageTypeName[subType]
     return render(request, "backend_history.htm", locals())
 
+@ValidateCookie
 def FeatureType(request, featureTypeId :int=0, actionType :str=None):
     if request.method == "POST":
         form = ValidForm.FeatureType(request.POST)
@@ -213,10 +282,10 @@ def FeatureType(request, featureTypeId :int=0, actionType :str=None):
         else:
             formError = form.errors
             error = ""
-            for e in formError.values:
+            for e in formError.values():
                 error = error + e + " \t"
             msg = error
-            form = ValidForm()
+            form = ValidForm.FeatureType()
     else:
         if actionType == "delete" and featureTypeId > 0:
             record = models.FeatureType.objects.get(featuretypeid=featureTypeId)
@@ -233,7 +302,7 @@ def FeatureType(request, featureTypeId :int=0, actionType :str=None):
     currentTypeName = pageTypeName[subType]
     return render(request, "backend_featureType.htm", locals())
    
-
+@ValidateCookie
 def FeatureInfo(request, featureInfoId :int=0, actionType :str=None):
     if request.method == "POST":
         form = ValidForm.FeatureInfo(request.POST)
@@ -255,10 +324,10 @@ def FeatureInfo(request, featureInfoId :int=0, actionType :str=None):
         else:
             formError = form.errors
             error = ""
-            for e in formError.values:
+            for e in formError.values():
                 error = error + e + " \t"
             msg = error
-            form = ValidForm()        
+            form = ValidForm.FeatureInfo()        
     else:
         if actionType == "delete" and featureInfoId > 0:
             record = models.FeatureInfo.objects.get(featureinfoid=featureInfoId)
@@ -277,7 +346,7 @@ def FeatureInfo(request, featureInfoId :int=0, actionType :str=None):
     currentTypeName = pageTypeName[subType]
     return render(request, "backend_featureInfo.htm", locals())
     
-
+@ValidateCookie
 def Category(request, categoryId :int=0, actionType :str=None):
     if request.method == "POST":
         form = ValidForm.Category(request.POST)
@@ -297,10 +366,10 @@ def Category(request, categoryId :int=0, actionType :str=None):
         else:
             formError = form.errors
             error = ""
-            for e in formError.values:
+            for e in formError.values():
                 error = error + e + " \t"
             msg = error
-            form = ValidForm() 
+            form = ValidForm.Category() 
     else:
         if actionType == "delete" and categoryId > 0:
             record = models.Category.objects.get(categoryid=categoryId)
@@ -317,6 +386,7 @@ def Category(request, categoryId :int=0, actionType :str=None):
     currentTypeName = pageTypeName[subType]
     return render(request, "backend_category.htm", locals())
 
+@ValidateCookie
 def Item(request, itemId :int=0, actionType :str=None):
     if request.method == "POST":
         form = ValidForm.Item(request.POST, request.FILES)
@@ -354,10 +424,10 @@ def Item(request, itemId :int=0, actionType :str=None):
         else:
             formError = form.errors
             error = ""
-            for e in formError.values:
+            for e in formError.values():
                 error = error + e + " \t"
             msg = error
-            form = ValidForm()
+            form = ValidForm.Item()
     else:
         if actionType == "delete" and itemId > 0:
             
@@ -378,6 +448,7 @@ def Item(request, itemId :int=0, actionType :str=None):
     currentTypeName = pageTypeName[subType]
     return render(request, "backend_item.htm", locals())
 
+@ValidateCookie
 def News(request, newsId :int=0, actionType :str=None):
     form = ValidForm.News(request.POST)
     if form.is_valid():
@@ -397,10 +468,10 @@ def News(request, newsId :int=0, actionType :str=None):
         else:
             formError = form.errors
             error = ""
-            for e in formError.values:
+            for e in formError.values():
                 error = error + e + " \t"
             msg = error
-            form = ValidForm()
+            form = ValidForm.News()
     else:
         if actionType == "delete" and newsId > 0:
             record = models.News.objects.get(newsid=newsId)
@@ -418,6 +489,7 @@ def News(request, newsId :int=0, actionType :str=None):
     currentTypeName = pageTypeName[subType]
     return render(request, "backend_news.htm", locals())
 
+@ValidateCookie
 def Faq(request, faqId :int=0, actionType :str=None):
     if request.method == "POST":
         form = ValidForm.Faq(request.POST)
@@ -437,10 +509,10 @@ def Faq(request, faqId :int=0, actionType :str=None):
         else:
             formError = form.errors
             error = ""
-            for e in formError.values:
+            for e in formError.values():
                 error = error + e + " \t"
             msg = error
-            form = ValidForm()
+            form = ValidForm.Faq()
     else:
         if actionType == "delete" and faqId > 0:
             record = models.Faq.objects.get(faqid=faqId)
@@ -457,7 +529,7 @@ def Faq(request, faqId :int=0, actionType :str=None):
     currentTypeName = pageTypeName[subType]
     return render(request, "backend_faq.htm", locals())
 
-
+@ValidateCookie
 def Downloads(request, downloadsId :int=0, actionType :str=None):    
     if request.method == "POST":
         form = ValidForm.Downloads(request.POST, request.FILES)
@@ -488,10 +560,10 @@ def Downloads(request, downloadsId :int=0, actionType :str=None):
         else:
             formError = form.errors
             error = ""
-            for e in formError.values:
+            for e in formError.values():
                 error = error + e + " \t"
             msg = error
-            form = ValidForm()
+            form = ValidForm.Downloads()
     else:
         if actionType == "delete" and downloadsId > 0:
             record = models.Downloads.objects.get(downloadsid=downloadsId)
@@ -508,6 +580,7 @@ def Downloads(request, downloadsId :int=0, actionType :str=None):
     currentTypeName = pageTypeName[subType]    
     return render(request, "backend_downloads.htm", locals())    
 
+@ValidateCookie
 def Company(request, actionType :str=None):    
     if request.method == "POST":
         form = ValidForm.Company(request.POST)
@@ -538,10 +611,10 @@ def Company(request, actionType :str=None):
         else:
             formError = form.errors
             error = ""
-            for e in formError.values:
+            for e in formError.values():
                 error = error + e + " \t"
             msg = error
-            form = ValidForm()
+            form = ValidForm.Company()
 
     query = models.Company.objects.all().first()
     data = query
@@ -552,7 +625,7 @@ def Company(request, actionType :str=None):
     subMenu = subTypeData.get(mainType)
     currentTypeName = pageTypeName[subType]
     return render(request, "backend_company.htm", locals())
- 
+
 
 def GetForm(request, messageId :int=0, formId :int=0):
     if formId > 0:
@@ -564,8 +637,8 @@ def GetForm(request, messageId :int=0, formId :int=0):
         return JsonResponse(record)
     else:
         return JsonResponse(status=404)
-    
 
+@ValidateCookie
 def Message(request, messageId :int=0):
     if request.method == "POST" and messageId > 0:
         form = ValidForm.Message(request.POST)
@@ -574,13 +647,15 @@ def Message(request, messageId :int=0):
             record.processed = True if request.POST.get('processed') is not None and request.POST.get('processed').lower() == "on" else False
             record.save()
             msg = "update success!" 
+            formRecord = models.Form.objects.get(formid=record.formid_id)
+            SendMail(formRecord.email, approvalOrderSubject, approvalOrderContent) # 寄信
         else:
             formError = form.errors
             error = ""
-            for e in formError.values:
+            for e in formError.values():
                 error = error + e + " \t"
             msg = error
-            form = ValidForm()
+            form = ValidForm.Message()
     
     data = models.Message.objects.all()
     
@@ -592,12 +667,121 @@ def Message(request, messageId :int=0):
     return render(request, "backend_message.htm", locals())
 
 
-def changeIndex(request, mainType):
+def Login(request):
+    nowTime = int(time.time())
+    expirationTime = 7 * 2 * 24 * 60 * 60
+    if 'StarkWebAccount' in request.COOKIES and 'StarkWebToken' in request.COOKIES:
+        userRecord = models.Employee.objects.filter(account=request.COOKIES['StarkWebAccount']).first()
+        if userRecord is not None:
+            userTokenRecord = models.LoginToken.objects.filter(employeeid_id = userRecord.employeeid).order_by('-tokenTime').first()
+            userLoginRecord = models.Login.objects.filter(employeeid_id = userRecord.employeeid).order_by('-loginTime').first()
+            if userTokenRecord is not None and (userTokenRecord.tokenTime + expirationTime < nowTime):
+                if userLoginRecord is not None and userLoginRecord.logoutTime is None:
+                    userLoginRecord.logoutTime = nowTime
+                    userLoginRecord.save()
+                response = render(request, "front_login.htm", locals())
+                response.delete_cookie('StarkWebAccount')
+                response.delete_cookie('StarkWebToken')
+                return response
+            
+            elif userTokenRecord is not None:
+                if userLoginRecord is not None and userLoginRecord.logoutTime is None:
+                    msg = "cookie pass"
+                    
+                    query = models.Banner.objects.all()
+                    data = query 
+
+                    mainType = pageMainType[0]
+                    subType = pageSubType[mainType][0]
+                    menu = typeData
+                    subMenu = subTypeData.get(mainType)
+                    currentTypeName = pageTypeName[subType]
+                    return render(request, "backend_banner.htm", locals())
+    
+    if request.method == "POST": 
+        form = ValidForm.Login(request.POST)
+        if form.is_valid():
+            userRecord = models.Employee.objects.filter(account=form.cleaned_data['username'], password=form.cleaned_data['password']).first()
+            if userRecord == None:
+                msg = "permissions denied!"
+            userHash = datetime.utcfromtimestamp(nowTime).strftime("%Y/%m/%d %H:%M:%S") + "_" + request.POST['username'] + "_" + request.POST['password'] 
+            token = hashlib.sha256(userHash.encode("utf-8")).hexdigest()[:30]         
+            
+            models.LoginToken.objects.create(token=token, tokenTime=nowTime, employeeid_id=userRecord.employeeid)
+            models.Login.objects.create(loginTime=nowTime, employeeid_id=userRecord.employeeid)
+            
+            query = models.Banner.objects.all()
+            data = query 
+            
+            mainType = pageMainType[0]
+            subType = pageSubType[mainType][0]
+            menu = typeData
+            subMenu = subTypeData.get(mainType)
+            currentTypeName = pageTypeName[subType]
+                                    
+            host = request.get_host()             
+            scheme = request.scheme            
+            
+            response = redirect(f"{scheme}://{host}/backend/{mainType}/{subType}") 
+            response.set_cookie('StarkWebAccount', form.cleaned_data['username'], max_age=expirationTime)
+            response.set_cookie('StarkWebToken', token, max_age=expirationTime)
+ 
+            return response
+        else:
+            formError = form.errors
+            error = ""
+            for e in formError.values():
+                error = error + str(e) + " \t"
+            msg = error
+            form = ValidForm.Login()
+            
+    return render(request, "front_login.htm", locals()) 
+
+
+def Logout(request):
+    if request.COOKIES['StarkWebAccount'] is None or request.COOKIES['StarkWebToken'] is None:
+        return redirect("/")
+    nowTime = int(time.time())
+    userRecord = models.Employee.objects.filter(account=request.COOKIES['StarkWebAccount']).first()
+    userLoginRecord = models.Login.objects.filter(employeeid_id = userRecord.employeeid).order_by('-loginTime').first()
+    userLoginRecord.logoutTime = nowTime
+    userLoginRecord.save()
+    response = redirect("/")
+    response.delete_cookie('StarkWebAccount')
+    response.delete_cookie('StarkWebToken')    
+    return response
+
+
+def ChangeIndex(request, mainType):
     if (pageSubType.get(mainType) != None and len(pageSubType.get(mainType)) > 0 and pageSubType.get(mainType)[0] != None):
         subType = pageSubType.get(mainType)[0]
         return redirect(f"/backend/{mainType}/{subType}/")
     else:
-        return JsonResponse(status=404)
+        return JsonResponse({"msg": "Not Found"},status=404)
+
+
+def SendMail(mailto, mailsubject, mailcontent): # 寄信
+    global message
+    strSmtp = "smtp.gmail.com:587" #主機
+    strAccount = settings.mailFrom # 帳號
+    strPassword = settings.mailPW # 密碼
+    msg = MIMEText(mailcontent) 
+    msg["Subject"] = mailsubject # 郵件標題
+    mailto1 = mailto # 收件者
+    
+    server = SMTP(strSmtp) # 建立 SMTP 連線
+    server.ehlo() # 跟主機溝通
+    server.starttls() # TTLS 安全認證
+
+    try:
+        server.login(strAccount, strPassword) # 登入
+        server.sendmail(strAccount, mailto1, msg.as_string()) # 寄信    
+    except SMTPAuthenticationError:
+        message = "無法登入！"
+    except:
+        message = "郵件發送產生錯誤！"
+    server.quit() # 關閉連線
+
 
 def __fileSize(fileByte):
     sizeType = ["B", "KB", "MB", "GB"]
@@ -614,6 +798,7 @@ def __SaveFile(file, name: str, fileFormat:str):
     fileName = hashlib.sha256(fileName.encode("utf-8")).hexdigest()[:10] + fileFormat
     fs = FileSystemStorage()
     return fs.save(fileName, file)
+
 
 def __DeleteFile(filePath: str):
     filePath = filePath[1:]

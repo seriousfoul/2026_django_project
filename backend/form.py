@@ -124,13 +124,13 @@ class Item(forms.Form):
 class News(forms.Form):    
     title = forms.CharField(max_length=30, error_messages=error_message)
     content = forms.CharField(widget=forms.Textarea(attrs={'rows': 10, 'cols': 50}), error_messages=error_message)
-        
+
 
 class Faq(forms.Form):    
     question = forms.CharField(widget=forms.Textarea(attrs={'rows': 10, 'cols': 50}), max_length=30, error_messages=error_message)
     answer = forms.CharField(widget=forms.Textarea(attrs={'rows': 10, 'cols': 50}), error_messages=error_message)
-        
-        
+
+
 class Downloads(forms.Form):    
     name = forms.CharField(max_length=30, error_messages=error_message)
     pdf = forms.FileField(
@@ -154,8 +154,13 @@ class Company(forms.Form):
     phone = forms.CharField(max_length=20, error_messages=error_message)
     fax = forms.CharField(max_length=20, required=False, error_messages=error_message)  
     servicetime = forms.CharField(widget=forms.Textarea(attrs={'rows': 10, 'cols': 50}), required=False, error_messages=error_message)
-    
+
 
 class Message(forms.Form):    
     read = forms.BooleanField(required=False, error_messages=error_message)
     processed = forms.BooleanField(required=False, error_messages=error_message)
+
+
+class Login(forms.Form):
+    username = forms.CharField(max_length=30, error_messages=error_message)
+    password = forms.CharField(max_length=30, error_messages=error_message)

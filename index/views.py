@@ -4,6 +4,16 @@ from django.http import JsonResponse
 import random
 from django.forms.models import model_to_dict
 import index.form as ValidForm
+import backend.views as backend
+
+purchaseOrderSubject = "史打客工業-感謝您訂購產品"
+purchaseOrderContent = """
+<h2>親愛的顧客您好<h2>
+<h4>
+您的訂單已收到，目前對訂單進行審核。<br />
+完成訂單審核後會再通知您。
+</h4>
+"""
 
 # Create your views here.
 def Index(request):
@@ -80,8 +90,7 @@ def Downloads(request):
     brandSlogan, company = __templates()
     return render(request, "front_downloads.htm", locals())
 
-def ContactUs(request):
-    
+def ContactUs(request):    
     brandSlogan, company = __templates()
     return render(request, "front_contactus.htm", locals())
 
@@ -103,7 +112,8 @@ def AddForm(request):
         processed = False
         record = models.Message.objects.create(formid_id=formId, read=read, processed=processed)
         record.save()
-        msg = "insert success!" 
+        msg = "insert success!"
+        backend.SendMail(email, purchaseOrderSubject, purchaseOrderContent)
     else:
         formError = form.errors
         error = ""
@@ -113,6 +123,7 @@ def AddForm(request):
         form = ValidForm()
        
     return render(request, "front_contactus.htm", locals())
+
 
 def __templates():
     brandSlogans = models.FeatureInfo.objects.filter(topic_id=3)

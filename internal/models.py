@@ -202,3 +202,43 @@ class Message(models.Model):
        #     self.addtime = now
            
        super().save(*args, **kwargs)
+              
+class Employee(models.Model):    
+    employeeid = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=30, null=False)    
+    account = models.CharField(max_length=30, null=False)
+    password = models.CharField(max_length=30, null=False)
+    enable = models.BooleanField(default=True, null=False)
+    companylevelid = models.ForeignKey('CompanyLevel', on_delete=models.CASCADE)
+    addtime = models.BigIntegerField()
+    lastUpdate = models.BigIntegerField()
+    
+    def save(self, *args, **kwargs):
+       now = int(time.time())
+       self.lastUpdate = now
+       
+       if not self.pk:
+           self.addtime = now
+           
+       super().save(*args, **kwargs)
+       
+class CompanyLevel(models.Model):  
+    companylevelid = models.AutoField(primary_key=True)
+    level = models.CharField(max_length=6)
+    name = models.CharField(max_length=30, null=False)
+    grade = models.CharField(max_length=30, null=False)
+    enable = models.BooleanField(default=True, null=False)
+    
+    
+class Login(models.Model):
+    loginid = models.AutoField(primary_key=True)
+    employeeid = models.ForeignKey('Employee', on_delete=models.CASCADE)
+    loginTime = models.BigIntegerField()
+    logoutTime = models.BigIntegerField()
+    
+    
+class LoginToken(models.Model):
+    logintokenid = models.AutoField(primary_key=True)
+    employeeid = models.ForeignKey('Employee', on_delete=models.CASCADE)
+    token = models.CharField(max_length=100, null=False)
+    tokenTime = models.BigIntegerField()

@@ -1,0 +1,44 @@
+{% extends "front_template.htm" %}
+{% load static %}
+
+{% block title%}    
+<title>史打克工業後端管理系統</title>
+<script src="{% static "/js/backend.js" %}" defer></script>
+<link rel="stylesheet" href="https://pro.fontawesome.com/releases/v5.10.0/css/all.css"/>
+{% endblock %}
+
+{% block content%}
+<div id="iframeBody">
+	<div class="formSet">
+		<form action="/login/" method="POST" enctype="multipart/form-data">
+			{% csrf_token %}
+			<fieldset>
+				<legend>登入帳號</legend>
+				<div class="mb-3">
+					<label class="form-label" for="username">帳號：</label>
+					<input class="form-control" name="username" maxlength="30" value="user01" required><br>
+					<label class="form-label" for="answer">密碼：</label>
+					<input class="form-control" type="password" name="password" id="password" value="abc12345678" required>
+					<i id="showPassword" onclick="showPassword()" class="fa-solid fa-eye-low-vision"></i><br>
+				</div>
+				<input class="btn btn-danger" type="submit" value="送出" />
+			</fieldset>
+		</form>
+	</div>
+</div>
+<script>
+	function showPassword(){
+		let showPassword = document.getElementById("showPassword");
+		
+		if(showPassword.className === "fa-solid fa-eye-low-vision")   {
+			document.getElementById("password").attributes.type = "text";
+		 	showPassword.className = "fa-solid fa-eye";
+		}
+		else{
+			document.getElementById("password").attributes.type = "password";
+		 	showPassword.className = "fa-solid fa-eye-low-vision";		
+		}
+		
+	}
+</script>
+{% endblock %}

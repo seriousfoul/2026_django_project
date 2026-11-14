@@ -35,8 +35,8 @@ urlpatterns = [
     path("downloads/", front.Downloads),
     path("contactus/", front.ContactUs),
     path("contactus/addform/", front.AddForm),
+    path("login/", backend.Login), 
     
-    path("backend/<str:mainType>/", backend.changeIndex),
     path("backend/index/banner/", backend.Banner),
     path("backend/index/banner/<int:bannerId>/", backend.Banner),
     path("backend/index/banner/<int:bannerId>/<str:actionType>/", backend.Banner),    
@@ -72,6 +72,10 @@ urlpatterns = [
     path("backend/contactUs/message/", backend.Message),
     path("backend/contactUs/message/<int:messageId>/", backend.Message),
     path("backend/contactUs/form/<int:messageId>/<int:formId>/", backend.GetForm),
+
+    path("backend/login/validateCookie/", backend.ValidateCookie),
+    path("backend/logout/", backend.Logout),
     
+    path("backend/<str:mainType>/", backend.ChangeIndex),
 ]
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)    

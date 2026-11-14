@@ -5,7 +5,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
     {% load static %}
     <link href="{% static "css/backend.css" %}" rel="stylesheet" type="text/css" />
-    {% block title %}{% endblock %}
+    {% block title %}{% endblock %}    
 </head>
 <body>
 	<div class="backend">
@@ -14,18 +14,20 @@
 			{% for type, typeName in menu.items %}
         	<button class="btn btn-outline-danger" onclick="changeIndex('{{type}}')" >{{typeName}}</button><br>
         	{% endfor %}
+        	<button class="btn btn-outline-danger" onclick="logout()" >後臺登出</button><br>
 		</div>
 		<div class="backendInfo">
 			{% block content %}{% endblock %}    
 		</div>
 	</div>
-</body>
-<script>    
+	<script>    
     var msg = {% if msg %} "{{msg}}" {% else %} null {% endif %};
     if (msg){
-				console.log("成功執行：", msg);
+		console.log("成功執行：", msg);
         alert(msg);
         msg = null;
     }
-</script>
+	</script>
+</body>
+
 </html>
